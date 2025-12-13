@@ -3,6 +3,9 @@ import numpy as np
 import torch
 import transformers
 
+ce_loss_fn = torch.nn.CrossEntropyLoss(reduction="none")
+softmax_fn = torch.nn.Softmax(dim=-1)
+
 # Compute the perplexity of a function
 def perplexity(encoding: transformers.BatchEncoding,
                logits: torch.Tensor,
@@ -15,12 +18,12 @@ def perplexity(encoding: transformers.BatchEncoding,
     if median:
         ce_nan = (ce_loss_fn(shifted_logits.transpose(1, 2), shifted_labels).
                   masked_fill(~shifted_attention_mask.bool(), float("nan")))
-        ppl = np.nanmedian(ce_nan.cpu().float().numpy(), 1)
+        ppl = np.nanmedian(ce_nan.cpu().float().detach().numpy(), 1)
 
     else:
         ppl = (ce_loss_fn(shifted_logits.transpose(1, 2), shifted_labels) *
                shifted_attention_mask).sum(1) / shifted_attention_mask.sum(1)
-        ppl = ppl.to("cpu").float().numpy()
+        ppl = ppl.to("cpu").float().detach().numpy()
 
     return ppl
 
@@ -49,8 +52,8 @@ def entropy(
 
     if median:
         ce_nan = ce.masked_fill(~padding_mask.bool(), float("nan"))
-        agg_ce = np.nanmedian(ce_nan.cpu().float().numpy(), 1)
+        agg_ce = np.nanmedian(ce_nan.cpu().float().detach().numpy(), 1)
     else:
-        agg_ce = (((ce * padding_mask).sum(1) / padding_mask.sum(1)).to("cpu").float().numpy())
+        agg_ce = (((ce * padding_mask).sum(1) / padding_mask.sum(1)).to("cpu").float().detach().numpy())
 
     return agg_ce

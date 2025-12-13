@@ -11,8 +11,8 @@ THRESHOLD = 0.9  # Example threshold value
 
 class Binoculars:
     def __init__(self,
-        observer= "google/gemma-3-270m-it",         #"tiiuae/falcon-7b", 
-        performer = "google/gemma-3-270m",                  #"tiiuae/falcon-7b-instruct",
+        observer= "google/gemma-3-270m",         #"tiiuae/falcon-7b", 
+        performer = "google/gemma-3-270m-it",                  #"tiiuae/falcon-7b-instruct",
         max_token = 512,
         mode= "low-fpr"):
 
@@ -59,6 +59,7 @@ class Binoculars:
         with ctx:
             observer_logits = self.observer_model(**encodings).logits
             performer_logits = self.performer_model(**encodings).logits
+        #print(observer_logits.shape, performer_logits.shape)
 
         # Binoculars score
         ppl = perplexity(encodings, performer_logits)  # array shape (B,) -> here B=1

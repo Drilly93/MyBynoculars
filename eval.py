@@ -1,8 +1,11 @@
+import os
+import argparse
+import torch
+import pandas as pd
 
 from data_score import eval_dataset
-import argparse
-
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
 
     # Precise it
     parser.add_argument("--data_path", type=str, help="Path to the jsonl file")
@@ -12,7 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("--machine_text_key", type=str,help="key for the machine-generated text")
 
     # Hyper parameters 
-    parser.add_argument("--tokens_seen", type=int, default=512, help="Number of tokens seen by the model")
+    parser.add_argument("--max_token", type=int, default=512, help="Number of tokens seen by the model")
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--mode", type=str, default="low-fpr", help="Mode of the detector : low-fpr / high-tpr")
 
@@ -24,21 +27,35 @@ if __name__ == "__main__":
         print(f"Number of GPUs: {torch.cuda.device_count()}")
         print(f"GPU Type: {torch.cuda.get_device_name(0)}")
 
+    # os.makedirs(f"{args.experiment_path}", exist_ok=True)
+
+    print("=" * 5, "start", "=" * 5)
+
     logs = eval_dataset(
         data_path=args.data_path,
         observer=args.pretrained_model,
         performer=args.instruct_model,
         h_key=args.human_text_key,
         m_key=args.machine_text_key,
-        max_token=args.tokens_seen,
+        max_token=args.max_token,
         batch_size=args.batch_size,
         mode=args.mode
     )
 
     # Create a #results csv file
     df = pd.DataFrame(logs)
-    output_csv = args.data_path.replace(".jsonl", "_detection_logs.csv")
+    # Put it inside results folder keep dataset file name
+    output_csv = os.path.join("results", "detection_logs.csv")
     df.to_csv(output_csv, index=False)
     print(f"Logs saved to {output_csv}")
 
-    print("=" * 60, "END", "=" * 60)
+    print("=" * 5, "END", "=" * 5)
+
+# Make the command line call example
+# 
+# python main.py 
+#   --data_path data/my_cc_news.jsonl 
+#   --pretrained_model google/gemma-3-270m 
+#   --instruct_model google/gemma-3-270m-it 
+#   --human_text_key text 
+#   --machine_text_key meta-llama-Llama-2-13b-hf_generated_text_wo_prompt
