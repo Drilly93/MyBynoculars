@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     # Precise it
     parser.add_argument("--data_path", type=str, help="Path to the jsonl file")
-    parser.add_argument("--pretrained_model", type=str, default="gpt2") # pretrained model 
+    parser.add_argument("--pretrained_model", type=str) # pretrained model 
     parser.add_argument("--instruct_model", type=str) # instruct model 
     parser.add_argument("--human_text_key", type=str, help="key for the human-generated text")
     parser.add_argument("--machine_text_key", type=str,help="key for the machine-generated text")
@@ -44,12 +44,17 @@ if __name__ == "__main__":
 
     # Create a #results csv file
     df = pd.DataFrame(logs)
+
     # Put it inside results folder keep dataset file name
     output_csv = os.path.join("results", "detection_logs.csv")
     df.to_csv(output_csv, index=False)
     print(f"Logs saved to {output_csv}")
 
     print("=" * 5, "END", "=" * 5)
+
+    df_logs = pd.DataFrame(logs)
+    df_scores = df_logs[["score", "true_class", "predicted_class"] ]
+    print(df_scores.head(30))
 
 # Make the command line call example
 # 
