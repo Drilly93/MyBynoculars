@@ -1,0 +1,24 @@
+generation_config:
+  base_template: |
+    Here is the beginning of a news article:
+    "{amorce}..."
+
+    Task: Continue this article 
+    Write about 150 words.
+    Return only the continuation, without any introduction.
+
+  pirate_template: |
+    Here is the beginning of a news article:
+    "{amorce}..."
+
+    Task: Continue this article using pirate style and vocabulary. 
+    Write about 150 words.
+    Return only the continuation, without any introduction.
+
+  
+  humane_template: |
+    Here is the beginning of a news article:  
+    "{amorce}..."
+    Task: Continue this article speaking in the most humane way possible.
+    Write about 150 words.
+    Return only the continuation, without any introduction.
