@@ -73,9 +73,10 @@ def evaluate_solon_classifier(model: SolonClassifier, dataloader, device):
     return accuracy
 
 
-
 NUM_LABELS = 2
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+SPLIT_SEED = 42
+VALIDATION_FRACTION = 0.1 
 
 model = SolonClassifier(num_classes=NUM_LABELS).to(device)
 tokenizer = AutoTokenizer.from_pretrained("OrdalieTech/Solon-embeddings-mini-beta-1.1", trust_remote_code=True)
@@ -89,7 +90,6 @@ def prepare_data(example):
     - Texte Humain (Label 0)
     - Texte IA (Label 1, ici on choisit ChatGPT)
     """
-    
     human_text = example["human_answers"][0] if example["human_answers"] else ""
     ai_text = example["chatgpt_answers"][0] if example["chatgpt_answers"] else "" 
 
@@ -102,25 +102,32 @@ def tokenize_function(examples):
     return tokenizer(examples["text"], truncation=True)
 
 
-
+print("Chargement du jeu de données...")
 raw_datasets = load_dataset("xzyao/HC3-Evaluation")
 
-processed_train_set = raw_datasets["train"].map(
-    prepare_data, 
-    batched=True, 
-    remove_columns=raw_datasets["train"].column_names
-)
-processed_val_set = raw_datasets["validation"].map(
-    prepare_data, 
-    batched=True, 
-    remove_columns=raw_datasets["validation"].column_names
+print(f"Division du split 'train' en Entraînement et Validation ({100 * (1 - VALIDATION_FRACTION)}% / {100 * VALIDATION_FRACTION}%)")
+split_datasets = raw_datasets["train"].train_test_split(
+    test_size=VALIDATION_FRACTION, 
+    seed=SPLIT_SEED
 )
 
-tokenized_train_set = processed_train_set.map(tokenize_function, batched=True)
-tokenized_val_set = processed_val_set.map(tokenize_function, batched=True)
+train_set = split_datasets["train"]
+val_set = split_datasets["test"]
 
-tokenized_train_set = tokenized_train_set.rename_column("label", "labels")
-tokenized_val_set = tokenized_val_set.rename_column("label", "labels")
+
+print("Préparation et tokenization des données...")
+
+tokenized_train_set = train_set.map(
+    prepare_data, 
+    batched=True, 
+    remove_columns=train_set.column_names
+).map(tokenize_function, batched=True).rename_column("label", "labels")
+
+tokenized_val_set = val_set.map(
+    prepare_data, 
+    batched=True, 
+    remove_columns=val_set.column_names
+).map(tokenize_function, batched=True).rename_column("label", "labels")
 
 
 
@@ -138,15 +145,17 @@ val_loader = DataLoader(
     collate_fn=data_collator
 )
 
+print(f"Taille du DataLoader d'entraînement: {len(train_loader)} lots")
+print(f"Taille du DataLoader de validation: {len(val_loader)} lots")
 
 
-print("Démarrage de l'entraînement...")
+print("\nDémarrage de l'entraînement...")
 train_solon_classifier(model, train_loader, device, epochs=10)
 
-print("Démarrage de l'évaluation...")
+print("\nDémarrage de l'évaluation...")
 evaluate_solon_classifier(model, val_loader, device)
 
 
 model_save_path = "solon_classifier.pth"
 torch.save(model.state_dict(), model_save_path)
-print(f"Modèle sauvegardé dans {model_save_path}")
+print(f"\nModèle sauvegardé dans {model_save_path}")
