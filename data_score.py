@@ -15,8 +15,8 @@ def eval_dataset(data_path, observer, performer,h_key, m_key, max_token=512, bat
         dataset = []
         for line in f:
             data = json.loads(line)
+            #print("Keys in JSON:", list(data.keys()))
             dataset.append({
-                #"id": data["id"],
                 "text": data[h_key] ,
                 "generated_text": data[m_key]
             })

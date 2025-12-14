@@ -13,6 +13,7 @@ if __name__ == "__main__":
     parser.add_argument("--instruct_model", type=str) # instruct model 
     parser.add_argument("--human_text_key", type=str, help="key for the human-generated text")
     parser.add_argument("--machine_text_key", type=str,help="key for the machine-generated text")
+    parser.add_argument("--output_file", type=str,default="output")
 
     # Hyper parameters 
     parser.add_argument("--max_token", type=int, default=512, help="Number of tokens seen by the model")
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     df = pd.DataFrame(logs)
 
     # Put it inside results folder keep dataset file name
-    output_csv = os.path.join("results", "detection_logs.csv")
+    output_csv = os.path.join("results", f"{args.output_file}.csv")
     df.to_csv(output_csv, index=False)
     print(f"Logs saved to {output_csv}")
 
@@ -54,6 +55,7 @@ if __name__ == "__main__":
 
     df_logs = pd.DataFrame(logs)
     df_scores = df_logs[["score", "true_class", "predicted_class"] ]
+    df_scores = df_scores.sample(n=30, random_state=42)
     print(df_scores.head(30))
 
 # Make the command line call example

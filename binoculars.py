@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from contextlib import nullcontext
 
 from metrics import perplexity, entropy
 
