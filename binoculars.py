@@ -64,9 +64,10 @@ class Binoculars:
         # Optimize space VRAM with autocast
         use_amp = self.device.startswith("cuda")
         ctx = torch.autocast(device_type="cuda", dtype=torch.float16) if use_amp else nullcontext()
-        with ctx:
-            observer_logits = self.observer_model(**encodings).logits
-            performer_logits = self.performer_model(**encodings).logits
+        with torch.no_grad():
+            with ctx:
+                observer_logits = self.observer_model(**encodings).logits
+                performer_logits = self.performer_model(**encodings).logits
         #print(observer_logits.shape, performer_logits.shape)
 
         # Binoculars score
