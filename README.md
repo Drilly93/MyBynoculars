@@ -28,6 +28,8 @@ Test the code on a directory of .jsonl dataset with :
     --instruct_model google/gemma-3-270m-it 
     --results_dir output_gemini
 
+Execute results.ipynb to see the results !!
+
 **Note** : human_text_key is the associated field of the human text>. Same for machine_text_key.
 
 ## Info :
