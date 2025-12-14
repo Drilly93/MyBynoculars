@@ -1,7 +1,11 @@
 import torch
 import torch.nn as nn
-from transformers import AutoModel, AutoTokenizer
-from torch.utils.data import DataLoader, Dataset
+from transformers import AutoModel, AutoTokenizer,DataCollatorWithPadding
+from datasets import load_dataset
+from torch.utils.data import DataLoader
+
+
+
 class SolonClassifier(nn.Module):
     def __init__(self, num_classes, model_name="OrdalieTech/Solon-embeddings-mini-beta-1.1"):
         super(SolonClassifier, self).__init__()
@@ -69,19 +73,80 @@ def evaluate_solon_classifier(model: SolonClassifier, dataloader, device):
     return accuracy
 
 
-NUM_LABELS = 2  
+
+NUM_LABELS = 2
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Instanciation
 model = SolonClassifier(num_classes=NUM_LABELS).to(device)
 tokenizer = AutoTokenizer.from_pretrained("OrdalieTech/Solon-embeddings-mini-beta-1.1", trust_remote_code=True)
+data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-train_set = Dataset("xzyao/HC3-Evaluation", split="train", tokenizer=tokenizer)
-train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
+
+
+def prepare_data(example):
+    """
+    Prépare un exemple en créant deux entrées :
+    - Texte Humain (Label 0)
+    - Texte IA (Label 1, ici on choisit ChatGPT)
+    """
+    
+    human_text = example["human_answers"][0] if example["human_answers"] else ""
+    ai_text = example["chatgpt_answers"][0] if example["chatgpt_answers"] else "" 
+
+    return {
+        "text": [human_text, ai_text],
+        "label": [0, 1]
+    }
+
+def tokenize_function(examples):
+    return tokenizer(examples["text"], truncation=True)
+
+
+
+raw_datasets = load_dataset("xzyao/HC3-Evaluation")
+
+processed_train_set = raw_datasets["train"].map(
+    prepare_data, 
+    batched=True, 
+    remove_columns=raw_datasets["train"].column_names
+)
+processed_val_set = raw_datasets["validation"].map(
+    prepare_data, 
+    batched=True, 
+    remove_columns=raw_datasets["validation"].column_names
+)
+
+tokenized_train_set = processed_train_set.map(tokenize_function, batched=True)
+tokenized_val_set = processed_val_set.map(tokenize_function, batched=True)
+
+tokenized_train_set = tokenized_train_set.rename_column("label", "labels")
+tokenized_val_set = tokenized_val_set.rename_column("label", "labels")
+
+
+
+train_loader = DataLoader(
+    tokenized_train_set, 
+    batch_size=16, 
+    shuffle=True,
+    collate_fn=data_collator
+)
+
+val_loader = DataLoader(
+    tokenized_val_set, 
+    batch_size=16, 
+    shuffle=False,
+    collate_fn=data_collator
+)
+
+
+
+print("Démarrage de l'entraînement...")
 train_solon_classifier(model, train_loader, device, epochs=10)
-val_set = Dataset("xzyao/HC3-Evaluation", split="validation", tokenizer=tokenizer)
-val_loader = DataLoader(val_set, batch_size=16, shuffle=False)
+
+print("Démarrage de l'évaluation...")
 evaluate_solon_classifier(model, val_loader, device)
+
 
 model_save_path = "solon_classifier.pth"
 torch.save(model.state_dict(), model_save_path)
+print(f"Modèle sauvegardé dans {model_save_path}")
