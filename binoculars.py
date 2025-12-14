@@ -35,12 +35,14 @@ class Binoculars:
             torch_dtype="auto",
         )
 
-        self.observer_model.eval()
-        self.performer_model.eval()
+
 
         self.tokenizer = AutoTokenizer.from_pretrained(observer)
         if self.tokenizer.pad_token is None:
                     self.tokenizer.pad_token = self.tokenizer.eos_token
+        
+        self.observer_model.eval()
+        self.performer_model.eval()
                     
                     
     def tokenize(self, batch: list[str]):

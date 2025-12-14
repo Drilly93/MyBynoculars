@@ -72,6 +72,34 @@ def evaluate_solon_classifier(model: SolonClassifier, dataloader, device):
     print(f"Accuracy: {accuracy:.4f}")
     return accuracy
 
+def prepare_data(examples):
+    """
+    Applatit le batch et crée une liste d'entrées (texte, étiquette)
+    où l'étiquette 0 est pour l'humain et 1 pour l'IA.
+    """
+    all_texts = []
+    all_labels = []
+
+    num_items_in_batch = len(examples["human_answers"])
+
+    for i in range(num_items_in_batch):
+        human_text = examples["human_answers"][i][0] if examples["human_answers"][i] else ""
+        all_texts.append(human_text)
+        all_labels.append(0)
+
+        ai_text = examples["chatgpt_answers"][i][0] if examples["chatgpt_answers"][i] else ""
+        all_texts.append(ai_text)
+        all_labels.append(1)
+
+    return {
+        "text": all_texts,
+        "label": all_labels
+    }
+
+def tokenize_function(examples):
+    return tokenizer(examples["text"], truncation=True)
+
+
 
 NUM_LABELS = 2
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -82,24 +110,6 @@ model = SolonClassifier(num_classes=NUM_LABELS).to(device)
 tokenizer = AutoTokenizer.from_pretrained("OrdalieTech/Solon-embeddings-mini-beta-1.1", trust_remote_code=True)
 data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-
-
-def prepare_data(example):
-    """
-    Prépare un exemple en créant deux entrées :
-    - Texte Humain (Label 0)
-    - Texte IA (Label 1, ici on choisit ChatGPT)
-    """
-    human_text = example["human_answers"][0] if example["human_answers"] else ""
-    ai_text = example["chatgpt_answers"][0] if example["chatgpt_answers"] else "" 
-
-    return {
-        "text": [human_text, ai_text],
-        "label": [0, 1]
-    }
-
-def tokenize_function(examples):
-    return tokenizer(examples["text"], truncation=True)
 
 
 print("Chargement du jeu de données...")
