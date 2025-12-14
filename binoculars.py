@@ -5,11 +5,8 @@ import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from contextlib import nullcontext
 
-try:
-    from transformers import Mistral3ForConditionalGeneration
-except ImportError:
-    Mistral3ForConditionalGeneration = None
-    
+from metrics import perplexity, entropy
+
 THRESHOLD = 0.9  # Example threshold value
 
 
@@ -40,7 +37,6 @@ class Binoculars:
         self.performer_model.eval()
 
         self.tokenizer = AutoTokenizer.from_pretrained(observer)
-        
         if self.tokenizer.pad_token is None:
                     self.tokenizer.pad_token = self.tokenizer.eos_token
                     
