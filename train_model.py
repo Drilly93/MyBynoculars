@@ -132,13 +132,15 @@ tokenized_train_set = train_set.map(
     batched=True, 
     remove_columns=train_set.column_names
 ).map(tokenize_function, batched=True).rename_column("label", "labels")
+tokenized_val_set = tokenized_train_set.remove_columns(["text"])
+
 
 tokenized_val_set = val_set.map(
     prepare_data, 
     batched=True, 
     remove_columns=val_set.column_names
 ).map(tokenize_function, batched=True).rename_column("label", "labels")
-
+tokenized_val_set = tokenized_val_set.remove_columns(["text"])
 
 
 train_loader = DataLoader(
