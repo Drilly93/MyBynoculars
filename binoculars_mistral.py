@@ -8,7 +8,7 @@ from transformers import AutoTokenizer
 # On tente d'importer la classe spécifique. 
 # Si elle n'existe pas (mauvaise version de transformers), on le signale.
 try:
-    from transformers import Mistral3ForConditionalGeneration
+    from transformers import Mistral3ForConditionalGeneration, FineGrainedFP8Config
 except ImportError:
     Mistral3ForConditionalGeneration = None
     print("Installez Mistral3ForConditionalGeneration et Mettez à jour 'transformers'.")
@@ -51,10 +51,12 @@ class Binoculars_Mistral:
             raise ImportError("Impossible de charger Ministral: la classe Mistral3ForConditionalGeneration est introuvable.")
             
         return Mistral3ForConditionalGeneration.from_pretrained(
-            model_name,
-            device_map={"": self.device},
-            torch_dtype="auto"
-        )
+                    model_name,
+                    device_map={"": self.device},
+                    # C'EST ICI LA CLÉ DU SUCCÈS SUR A100 :
+                    quantization_config=FineGrainedFP8Config(dequantize=True),
+                    torch_dtype=torch.bfloat16
+                )
 
     def tokenize(self, batch: list[str]):
         encodings = self.tokenizer(
