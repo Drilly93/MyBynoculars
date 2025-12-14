@@ -26,7 +26,7 @@ def eval_dataset(data_path, observer, performer,h_key, m_key, max_token=512, bat
             i+=1
     
     # Create the Binoculars detector
-    detector = Binoculars_Mistral(observer, performer, max_token, mode)
+    detector = Binoculars(observer, performer, max_token, mode)
 
     # Make a log dictionary with the text ( true or generated), score, true class, predicted class
     logs = []

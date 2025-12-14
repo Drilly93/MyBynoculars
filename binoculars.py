@@ -24,12 +24,14 @@ class Binoculars:
         self.observer_model = AutoModelForCausalLM.from_pretrained(
             observer,
             device_map={"": self.device},
+            load_in_8bit=True,
             torch_dtype="auto",
         )
 
         self.performer_model = AutoModelForCausalLM.from_pretrained(
             performer,
             device_map={"": self.device},
+            load_in_8bit=True,
             torch_dtype="auto",
         )
 
