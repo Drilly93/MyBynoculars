@@ -7,7 +7,7 @@ from contextlib import nullcontext
 
 from metrics import perplexity, entropy
 
-THRESHOLD = 0.9  # Example threshold value
+THRESHOLD = 1  # Example threshold value
 
 
 class Binoculars:
