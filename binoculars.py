@@ -5,8 +5,11 @@ import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from contextlib import nullcontext
 
-from metrics import perplexity, entropy
-
+try:
+    from transformers import Mistral3ForConditionalGeneration
+except ImportError:
+    Mistral3ForConditionalGeneration = None
+    
 THRESHOLD = 0.9  # Example threshold value
 
 
