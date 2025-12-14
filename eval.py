@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     # Hyper parameters 
     parser.add_argument("--max_token", type=int, default=512, help="Number of tokens seen by the model")
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--mode", type=str, default="low-fpr", help="Mode of the detector : low-fpr / high-tpr")
 
     args = parser.parse_args()

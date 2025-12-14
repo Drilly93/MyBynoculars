@@ -8,18 +8,22 @@ from tqdm import tqdm
 
 # keys : [ "text" , "generated_text" , others ... ]
 
-def eval_dataset(data_path, observer, performer,h_key, m_key, max_token=512, batch_size=32, mode="low-fpr"):
+def eval_dataset(data_path, observer, performer,h_key, m_key, max_token=512, batch_size=32, mode="low-fpr",max_size=100):
     
     # Make a dictionary out of the jsonl file
     with open(data_path, "r") as f:
         dataset = []
+        i = 0
         for line in f:
+            if i == max_size:
+                break
             data = json.loads(line)
             #print("Keys in JSON:", list(data.keys()))
             dataset.append({
                 "text": data[h_key] ,
                 "generated_text": data[m_key]
             })
+            i+=1
     
     # Create the Binoculars detector
     detector = Binoculars(observer, performer, max_token, mode)

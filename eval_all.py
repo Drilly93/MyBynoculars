@@ -13,6 +13,7 @@ def find_generated_key(data_path):
                 continue
             data = json.loads(line)
             for k in data.keys():
+                #print("Key found:", k)
                 if "generate" in k.lower():
                     return k  
     return "generate"
@@ -28,7 +29,7 @@ if __name__ == "__main__":
 
     # Hyper parameters 
     parser.add_argument("--max_token", type=int, default=512, help="Number of tokens seen by the model")
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--mode", type=str, default="low-fpr")
 
     args = parser.parse_args()
@@ -64,7 +65,7 @@ if __name__ == "__main__":
             observer=args.pretrained_model,
             performer=args.instruct_model,
             h_key="text",
-            m_key= "generate",
+            m_key= key_generated,
             max_token=args.max_token,
             batch_size=args.batch_size,
             mode=args.mode
